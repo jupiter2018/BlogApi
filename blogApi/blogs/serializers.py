@@ -2,27 +2,7 @@
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from django.contrib.auth.models import User
-from .models import BlogUser
-
-# class UserSerializer(serializers.ModelSerializer):
-#     email = serializers.EmailField(
-#             required=True,
-#             validators=[UniqueValidator(queryset=User.objects.all())]
-#             )
-#     username = serializers.CharField(
-#             validators=[UniqueValidator(queryset=User.objects.all())]
-#             )
-#     password = serializers.CharField(min_length=8)
-    
-
-#     def create(self, validated_data):
-#         user = User.objects.create_user(validated_data['username'], validated_data['email'],
-#              validated_data['password'])
-#         return user
-
-    # class Meta:
-    #     model = User
-    #     fields = ('id', 'username', 'email', 'password')
+from .models import BlogUser, BlogPost, PostLikes
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -79,4 +59,16 @@ class BlogUserSerializer(serializers.ModelSerializer):
 
     
     
-    
+class BlogPostSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BlogPost
+        fields = ('id', 'username', 'title', 'body', 'date_created', 'date_updated','likes')
+    username = serializers.SerializerMethodField('get_username')
+
+    def get_username(self, obj):
+        return obj.author.username
+
+class LikeSerializer(serializers.ModelSerializer):
+   class Meta:
+       model = PostLikes
+       fields = ('user', 'blogpost', 'created')

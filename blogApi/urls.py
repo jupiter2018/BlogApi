@@ -3,12 +3,16 @@ from rest_framework import routers
 from blogApi.blogs import views
 from django.contrib import admin
 from rest_framework.authtoken.views import obtain_auth_token
-from blogApi.blogs.models import BlogUser
+from blogApi.blogs.models import BlogUser,BlogPost,PostLikes
 
 router = routers.DefaultRouter()
 router.register('users', views.UserViewSet)
 router.register('profile', views.BlogUserViewset)
-admin.site.register(BlogUser)
+router.register('blogposts',views.BlogPostViewset)
+# admin.site.register(BlogUser)
+# admin.site.register(BlogPost)
+# admin.site.register(PostLikes)
+
 # router.register('login',views.LoginViewSet)
 #router.register(r'groups', views.GroupViewSet)
 
@@ -17,7 +21,9 @@ admin.site.register(BlogUser)
 urlpatterns = [
     path('', include(router.urls)),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    path('postlikes/<int:postId>/', views.CreateLikesView.as_view()),
     path('admin/', admin.site.urls),
+    
     
     
 ]
