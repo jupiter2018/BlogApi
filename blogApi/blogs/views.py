@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User, Group
 from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticated,AllowAny
+from rest_framework.permissions import IsAuthenticated,AllowAny, IsAdminUser
 from blogApi.blogs.serializers import UserSerializer, BlogUserSerializer, BlogPostSerializer, LikeSerializer
 from django.conf import settings
 from django.db.models.signals import post_save
@@ -9,7 +9,7 @@ from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
 from rest_framework.decorators import action
 from rest_framework.validators import UniqueValidator
-from .models import BlogUser, BlogPost
+from .models import BlogUser, BlogPost,PostLikes
 from rest_framework.response import Response
 from blogApi.blogs.permissions import IsOwnerOrReadOnly, hasPermissionToUpdateProfile, hasPermissionToUpdateBlog
 from rest_framework.views import APIView
@@ -23,8 +23,8 @@ class UserViewSet(viewsets.ModelViewSet):
     
     def get_permissions(self):
     
-        if self.action in ['list'] :
-            permission_classes = [IsAuthenticated]
+        if self.action in ['list','retrieve'] :
+            permission_classes = [IsAdminUser]
         elif self.action in ['update','partial_update']:
             permission_classes = [IsAuthenticated,
                       IsOwnerOrReadOnly]    
@@ -67,7 +67,7 @@ class BlogUserViewset(viewsets.ModelViewSet):
 
     def get_permissions(self):
     
-        if self.action in ['list','create']:
+        if self.action in ['list','create','retrieve']:
             permission_classes = [IsAuthenticated]
         
         elif self.action in ['update','destroy','partial_update']:
@@ -95,6 +95,8 @@ class BlogUserViewset(viewsets.ModelViewSet):
                 self.perform_create(serializer)
                 serializer.save()
                 return Response(serializer.data)
+            else:
+                return Response(serializer.errors)
     
     
     def update(self, request, *args, **kwargs):
@@ -122,7 +124,7 @@ class BlogPostViewset(viewsets.ModelViewSet):
 
     def get_permissions(self):
     
-        if self.action in ['list','create']:
+        if self.action in ['list','create','retrieve']:
             permission_classes = [IsAuthenticated]
         
         elif self.action in ['update','destroy','partial_update']:
@@ -185,7 +187,7 @@ class CreateLikesView(APIView):
         data = request.data
         user = request.user
         blogpost = self.get_object(postId)
-        existuserlike = [like for like in blogpost.likes if like.user.pk == user.pk]
+        existuserlike = [like for like in blogpost.likes.all() if like.user.pk == user.pk]
         if (existuserlike):
             return Response('You have already liked this post')
         else:
@@ -202,9 +204,9 @@ class DeleteLikesView(APIView):
     Create a like instance
     """
     permission_classes = [IsAuthenticated]
-    def get_object(self, postId):
+    def get_object(self, pk):
         try:
-            return PostLikes.objects.get(id=postId)
+            return PostLikes.objects.get(pk=pk)
         except PostLikes.DoesNotExist:
             raise Http404
 

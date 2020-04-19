@@ -62,7 +62,8 @@ class BlogUserSerializer(serializers.ModelSerializer):
 class BlogPostSerializer(serializers.ModelSerializer):
     class Meta:
         model = BlogPost
-        fields = ('id', 'username', 'title', 'body', 'date_created', 'date_updated','likes')
+        fields = ('id', 'username', 'title', 'body', 'date_created', 'date_updated', 'likes')
+        depth = 1
     username = serializers.SerializerMethodField('get_username')
 
     def get_username(self, obj):
@@ -71,4 +72,5 @@ class BlogPostSerializer(serializers.ModelSerializer):
 class LikeSerializer(serializers.ModelSerializer):
    class Meta:
        model = PostLikes
-       fields = ('user', 'blogpost', 'created')
+       fields = ('id', 'user', 'blogpost', 'created')
+       
