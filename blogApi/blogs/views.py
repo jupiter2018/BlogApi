@@ -45,7 +45,9 @@ class UserViewSet(viewsets.ModelViewSet):
         if serializer.is_valid(raise_exception=True):
             self.perform_create(serializer)
             return Response(serializer.data)
-    
+        else:
+            return Response(serializer.errors)
+        
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
@@ -59,6 +61,8 @@ class UserViewSet(viewsets.ModelViewSet):
 def create_auth_token(sender, instance=None, created=False, **kwargs):
     if created:
         Token.objects.create(user=instance)
+        BlogUser.objects.create(user=instance)
+
 
 
 class BlogUserViewset(viewsets.ModelViewSet):

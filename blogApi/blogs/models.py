@@ -22,5 +22,5 @@ class BlogPost(models.Model):
 
 class PostLikes(models.Model):
    user = models.ForeignKey(User,on_delete=models.CASCADE)
-   blogpost = models.ForeignKey(BlogPost, on_delete=models.CASCADE)
+   blog = models.ForeignKey(BlogPost, on_delete=models.CASCADE)
    created = models.DateTimeField(auto_now_add=True)
