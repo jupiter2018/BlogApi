@@ -27,6 +27,14 @@ class UserSerializer(serializers.ModelSerializer):
              validated_data['password'])
             
             return user
+    def update(self, instance, validated_data):
+        for attr, value in validated_data.items():
+            if attr == 'password':
+                instance.set_password(value)
+            else:
+                setattr(instance, attr, value)
+        instance.save()
+        return instance
 
     class Meta:
         model = User
@@ -40,11 +48,12 @@ class BlogUserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(required=False,min_length=8,style={'input_type':'password'},write_only=True)
     class Meta:
         model = BlogUser
-        fields = ('id', 'username', 'email', 'body', 'password', 'following')
+        fields = ('id', 'userId','username', 'email', 'body', 'password', 'following')
         depth=1
         #user = serializers.ReadOnlyField(source='user.username')
     username = serializers.SerializerMethodField('get_username')
     email = serializers.SerializerMethodField('get_email')
+    userId = serializers.SerializerMethodField('get_user_id')
     #password = serializers.SerializerMethodField('get_password')
     #user = serializers.ReadOnlyField(source='user.username')
     def get_username(self, obj):
@@ -52,6 +61,9 @@ class BlogUserSerializer(serializers.ModelSerializer):
 
     def get_email(self, obj):
         return obj.user.email
+
+    def get_user_id(self, obj):
+        return obj.user.id
     
     def create(self, validated_data):
         print(validated_data)

@@ -25,7 +25,7 @@ class UserViewSet(viewsets.ModelViewSet):
     
         if self.action in ['list','retrieve'] :
             permission_classes = [IsAdminUser]
-        elif self.action in ['update','partial_update']:
+        elif self.action in ['update','partial_update','destroy']:
             permission_classes = [IsAuthenticated,
                       IsOwnerOrReadOnly]    
         else:
@@ -52,10 +52,15 @@ class UserViewSet(viewsets.ModelViewSet):
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = UserSerializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data)
-    
+        if serializer.is_valid(raise_exception=True):
+            self.perform_update(serializer)
+            return Response(serializer.data)
+        return Response(serializer.errors)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT,headers = {"detail":"User successfully deleted"})
         
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_auth_token(sender, instance=None, created=False, **kwargs):
