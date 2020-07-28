@@ -39,7 +39,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'username', 'email', 'password','password2')
-
+        
 
 class BlogUserSerializer(serializers.ModelSerializer):
     # user_email = serializers.EmailField(required=False,
@@ -72,17 +72,31 @@ class BlogUserSerializer(serializers.ModelSerializer):
     
     
 class BlogPostSerializer(serializers.ModelSerializer):
+    
     class Meta:
         model = BlogPost
         fields = ('id', 'username', 'title', 'body', 'date_created', 'date_updated', 'likes')
-        depth = 1
+        depth = 2
+        
     username = serializers.SerializerMethodField('get_username')
+    # likes = serializers.SerializerMethodField('get_likes')
 
     def get_username(self, obj):
         return obj.author.username
+    # def get_likes(self, obj):
+    #     allLikes = []
+    #     for like in obj.likes.objects.all():
+    #         allLikes.append({id:like.id,created:like.created,username:like.user.username,blogId:like.blog.id})
+    #     return allLikes
 
 class LikeSerializer(serializers.ModelSerializer):
-   class Meta:
-       model = PostLikes
-       fields = ('id', 'user', 'blogpost', 'created')
+    blogposts = BlogPostSerializer(many=True, read_only=True)
+    class Meta:
+        model = PostLikes
+        fields = ('id', 'username', 'blog', 'created', 'blogposts')
+        extra_kwargs = {'blogposts': {'required': False}}
+    username = serializers.SerializerMethodField('get_username')
+
+    def get_username(self, obj):
+        return obj.user.username
        

@@ -14,6 +14,7 @@ from rest_framework.response import Response
 from blogApi.blogs.permissions import IsOwnerOrReadOnly, hasPermissionToUpdateProfile, hasPermissionToUpdateBlog
 from rest_framework.views import APIView
 from rest_framework import status
+from django.shortcuts import get_object_or_404
 class UserViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows users to be viewed or edited.
@@ -91,8 +92,19 @@ class BlogUserViewset(viewsets.ModelViewSet):
             queryset = BlogUser.objects.all()
             serializer = BlogUserSerializer(queryset, many=True)
             return Response(serializer.data)
+
         except:
             return Response("Cannot make a request without authenication")
+
+    def retrieve(self, request, pk=None):
+        try:
+            queryset = BlogUser.objects.all()
+            user = get_object_or_404(queryset, pk=pk)
+            serializer = BlogUserSerializer(user)
+            return Response(serializer.data)
+        except:
+            return Response("Cannot make a request without authenication")
+
 
     def create(self, request):
         blogUserInstance = BlogUser.objects.all()
@@ -173,6 +185,11 @@ class BlogPostViewset(viewsets.ModelViewSet):
         serializer.save()
         return Response(serializer.data)
 
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.delete()
+        return Response(status=status.HTTP_200_OK,data= {"detail":"Blog successfully deleted"})
+
 
     def perform_create(self, serializer):
         #print(self.request.user)
@@ -194,19 +211,29 @@ class CreateLikesView(APIView):
     def post(self, request, postId, format=None):
         print(postId)
         data = request.data
-        user = request.user
+        # user = request.user
+        currentuser = Token.objects.get(key=self.request.auth).user
         blogpost = self.get_object(postId)
-        existuserlike = [like for like in blogpost.likes.all() if like.user.pk == user.pk]
+        existuserlike = [like for like in blogpost.likes.all() if like.user.pk == currentuser.pk]
         if (existuserlike):
             return Response('You have already liked this post')
         else:
-            data['user'] = user.pk
-            data['blogpost'] = blogpost.pk
+            # data['user'] = currentuser.pk
+            data['blog'] = blogpost.pk
             serializer = LikeSerializer(data=data)
             if serializer.is_valid():
-                serializer.save()
+                self.perform_create(serializer)
+                newlike = serializer.save()
+                print("hello", newlike)
+                blogpost.likes.add(newlike)
+                
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def perform_create(self, serializer):
+        #print(self.request.user)
+        currentuser = Token.objects.get(key=self.request.auth).user
+        serializer.save(user=currentuser)
 
 class DeleteLikesView(APIView):
     """
@@ -222,4 +249,48 @@ class DeleteLikesView(APIView):
     def delete(self, request, pk, format=None):
         postlike = self.get_object(pk)
         postlike.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        # return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_200_OK, data={"detail": "Blog successfully deleted"})
+        
+
+class AddFollowView(APIView):
+    permission_classes = [IsAuthenticated]
+    # def get_object(self, username):
+    #     try:
+    #         return BlogUser.objects.get(user.username = username)
+    #     except BlogUser.DoesNotExist:
+    #         raise Http404
+
+    def post(self, request, followname, format=None):
+       
+        logged_in_user = Token.objects.get(key=self.request.auth).user
+        # followname = kwargs['followname']
+        logged_in_bloguser = BlogUser.objects.get(user=logged_in_user)
+        newfollow = User.objects.get(username=followname)
+        newfollowBlogUser = BlogUser.objects.get(user=newfollow)
+        existingFollower = [follower for follower in logged_in_bloguser.following.all() if follower.user.username == followname]
+        if (existingFollower):
+            return Response('Already a follower')
+        else:
+            logged_in_bloguser.following.add(newfollowBlogUser)
+            serializer = BlogUserSerializer(newfollowBlogUser)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+class RemoveFollowView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, followname, format=None):
+        logged_in_user = Token.objects.get(key=self.request.auth).user
+        # followname = kwargs['followname']
+        logged_in_bloguser = BlogUser.objects.get(user=logged_in_user)
+        newfollow = User.objects.get(username=followname)
+        newfollowBlogUser = BlogUser.objects.get(user=newfollow)
+        existingFollower = [follower for follower in logged_in_bloguser.following.all() if follower.user.username == followname]
+        print(existingFollower)
+        if (not existingFollower):
+            return Response('No follower to be deleted')
+        else:
+            logged_in_bloguser.following.remove(newfollowBlogUser)
+            serializer = BlogUserSerializer(newfollowBlogUser)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        

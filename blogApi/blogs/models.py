@@ -15,7 +15,7 @@ class BlogPost(models.Model):
    body = models.TextField(max_length=2000, blank=False, null=False)
    date_created = models.DateTimeField(auto_now_add=True, verbose_name='date created')
    date_updated = models.DateTimeField(auto_now=True, verbose_name='date updated')
-   likes = models.ManyToManyField('PostLikes',blank=True)
+   likes = models.ManyToManyField('PostLikes',related_name='blogposts',blank=True)
    author = models.ForeignKey(User, on_delete=models.CASCADE)
    def __str__(self):
         return f"{self.author.username}-{self.title}"

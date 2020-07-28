@@ -17,6 +17,8 @@ urlpatterns = [
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     path('postlikes/<int:postId>/', views.CreateLikesView.as_view()),
     path('deletelikes/<int:pk>/',views.DeleteLikesView.as_view()),
+    path('addfollows/<str:followname>/',views.AddFollowView.as_view()),
+    path('removefollows/<str:followname>/',views.RemoveFollowView.as_view()),
     path('admin/', admin.site.urls),
        
 ]
