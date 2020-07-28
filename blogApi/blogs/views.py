@@ -140,7 +140,7 @@ class BlogUserViewset(viewsets.ModelViewSet):
 
 
 class BlogPostViewset(viewsets.ModelViewSet):
-    queryset = BlogPost.objects.all()
+    queryset = BlogPost.objects.all().order_by('-date_created')
     serializer_class = BlogPostSerializer
 
     def get_permissions(self):
@@ -157,7 +157,7 @@ class BlogPostViewset(viewsets.ModelViewSet):
     def list(self, request):
         
         try:
-            queryset = BlogPost.objects.all()
+            queryset = BlogPost.objects.all().order_by('-date_created')
             serializer = BlogPostSerializer(queryset, many=True)
             return Response(serializer.data)
         except:
