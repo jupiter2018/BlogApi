@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
 import os
+from blogApi.blogs.secrets import *
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -20,7 +21,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'd%&bm4s9p$7s&@u_jh@@&&=@*)@$$g27$lg_xb0_9swya==^be'
+# SECRET_KEY = 'd%&bm4s9p$7s&@u_jh@@&&=@*)@$$g27$lg_xb0_9swya==^be'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
